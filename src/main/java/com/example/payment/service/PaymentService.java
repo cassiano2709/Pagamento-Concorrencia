@@ -6,20 +6,34 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.logging.Logger;
 
 @Service
 public class PaymentService {
+
     private static final Logger logger = Logger.getLogger(PaymentService.class.getName());
+
     private final PaymentRepository repository;
     private final Executor taskExecutor;
 
     public PaymentService(PaymentRepository repository, Executor taskExecutor) {
         this.repository = repository;
         this.taskExecutor = taskExecutor;
+    }
+
+    // 🟢 Novo método para criar pagamento
+    public Payment createPayment(Payment payment) {
+        return repository.save(payment);
+    }
+
+    // 🟢 Novo método para buscar pagamento por ID
+    public Optional<Payment> getPaymentById(Long id) {
+        return repository.findById(id);
     }
 
     public void processPayment(Long paymentId, BigDecimal deduction) {
@@ -55,7 +69,7 @@ public class PaymentService {
     }
 
     public void simulateConcurrentPayments(Long id, BigDecimal amount) {
-        List<CompletableFuture<Void>> futures = new java.util.ArrayList<>();
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> processPayment(id, amount), taskExecutor);
             futures.add(future);
